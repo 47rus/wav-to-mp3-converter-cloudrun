@@ -2,3 +2,7 @@ fastapi==0.109.0
 uvicorn==0.27.0
 pydub==0.25.1
 python-multipart==0.0.6
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+gunicorn
