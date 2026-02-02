@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application file directly into the working directory
-COPY app/main.py .
+COPY app/ ./app
 
 # Expose the port the app runs on
 EXPOSE 8080
