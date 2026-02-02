@@ -69,44 +69,34 @@ def upload_to_drive(file_path, file_name):
     return file_metadata.get('webContentLink')
 
 
-UPLOAD_DIRECTORY = "./temp_uploads"
-CONVERTED_DIRECTORY = "./temp_converted"
-
-# Ensure upload and converted directories exist
-os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
-os.makedirs(CONVERTED_DIRECTORY, exist_ok=True)
+import tempfile
 
 @app.post("/convert/")
 async def convert_wav_to_mp3(file: UploadFile = File(...)):
     if not file.filename.endswith(".wav"):
         raise HTTPException(status_code=400, detail="Only .wav files are supported")
 
-    file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
-    converted_file_name = file.filename.replace(".wav", ".mp3")
-    converted_file_path = os.path.join(CONVERTED_DIRECTORY, converted_file_name)
-
     try:
-        # Save the uploaded WAV file temporarily
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, file.filename)
+            converted_file_name = file.filename.replace(".wav", ".mp3")
+            converted_file_path = os.path.join(temp_dir, converted_file_name)
 
-        # Convert WAV to MP3 using pydub, optimized for voice transcription
-        audio = AudioSegment.from_wav(file_path)
-        audio = audio.set_channels(1) # Convert to mono
-        audio = audio.set_frame_rate(16000) # Set sample rate to 16kHz
-        audio.export(converted_file_path, format="mp3", bitrate="64k")
+            # Save the uploaded WAV file temporarily
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
 
-        # Upload the converted file to Google Drive
-        download_link = upload_to_drive(converted_file_path, converted_file_name)
+            # Convert WAV to MP3 using pydub, optimized for voice transcription
+            audio = AudioSegment.from_wav(file_path)
+            audio = audio.set_channels(1)  # Convert to mono
+            audio = audio.set_frame_rate(16000)  # Set sample rate to 16kHz
+            audio.export(converted_file_path, format="mp3", bitrate="64k")
 
-        return {"filename": converted_file_name, "download_link": download_link}
+            # Upload the converted file to Google Drive
+            download_link = upload_to_drive(converted_file_path, converted_file_name)
+
+            return {"filename": converted_file_name, "download_link": download_link}
 
     except Exception as e:
         logging.exception("An error occurred during file conversion and upload.")
         raise HTTPException(status_code=500, detail=f"Conversion failed: {e}")
-    finally:
-        # Clean up temporary files
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        if os.path.exists(converted_file_path):
-            os.remove(converted_file_path)
