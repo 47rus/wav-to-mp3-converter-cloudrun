@@ -19,5 +19,5 @@ COPY ./app .
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Run the Uvicorn server when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the Uvicorn server when the container launches, using the port defined by Cloud Run
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$PORT"]
