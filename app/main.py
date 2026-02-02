@@ -27,7 +27,7 @@ app = FastAPI()
 # set as an environment variable named 'FOLDER_ID'.
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
+SERVICE_ACCOUNT_FILE = '/app/wav-converter-service-account'
 FOLDER_ID = os.environ.get('FOLDER_ID')
 
 def get_drive_service():
