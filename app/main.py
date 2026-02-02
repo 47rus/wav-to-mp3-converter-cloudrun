@@ -48,15 +48,20 @@ def upload_to_drive(file_path, file_name):
     media = MediaFileUpload(file_path, mimetype='audio/mpeg')
     file = service.files().create(body=file_metadata,
                                     media_body=media,
-                                    fields='id').execute()
+                                    fields='id',
+                                    supportsAllDrives=True).execute()
     file_id = file.get('id')
 
     # Make the file publicly readable
     permission = {'type': 'anyone', 'role': 'reader'}
-    service.permissions().create(fileId=file_id, body=permission).execute()
+    service.permissions().create(fileId=file_id,
+                                 body=permission,
+                                 supportsAllDrives=True).execute()
 
     # Get the file's metadata again to retrieve the downloadable link
-    file_metadata = service.files().get(fileId=file_id, fields='webContentLink').execute()
+    file_metadata = service.files().get(fileId=file_id,
+                                        fields='webContentLink',
+                                        supportsAllDrives=True).execute()
     return file_metadata.get('webContentLink')
 
 
