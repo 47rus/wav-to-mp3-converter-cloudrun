@@ -6,9 +6,18 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
+import logging
+
+
+
 app = FastAPI()
 
+
+
 # Application is API-only, no static files are served.
+
+
+
 # --- Google Drive Configuration ---
 # The application uses a service account to authenticate with the Google Drive API.
 # The service account credentials should be stored in a file named 'service_account.json'.
@@ -93,6 +102,7 @@ async def convert_wav_to_mp3(file: UploadFile = File(...)):
         return {"filename": converted_file_name, "download_link": download_link}
 
     except Exception as e:
+        logging.exception("An error occurred during file conversion and upload.")
         raise HTTPException(status_code=500, detail=f"Conversion failed: {e}")
     finally:
         # Clean up temporary files
