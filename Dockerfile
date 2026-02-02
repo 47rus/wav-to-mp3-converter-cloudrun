@@ -20,4 +20,4 @@ COPY app/ ./app
 EXPOSE 8080
 
 # Run the production server Gunicorn with the simple, proven command
-CMD gunicorn --bind 0.0.0.0:$PORT app.main:app
+CMD gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT app.main:app
