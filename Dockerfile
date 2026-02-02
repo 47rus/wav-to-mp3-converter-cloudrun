@@ -13,11 +13,11 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code into the container
-COPY ./app/. .
+# Copy the entire project context into the container
+COPY . .
 
 # Expose the port the app runs on
 EXPOSE 8080
 
 # Run the production server Gunicorn with a Uvicorn worker using shell form
-CMD gunicorn -w 1 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips='*' --bind 0.0.0.0:$PORT main:app
+CMD gunicorn -w 1 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips='*' --bind 0.0.0.0:$PORT app.main:app
