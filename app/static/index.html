@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV to MP3 Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #343a40;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1 class="mb-4">WAV to MP3 Converter</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="wavFile" class="form-label">Upload WAV File</label>
+                <input class="form-control" type="file" id="wavFile" name="file" accept=".wav" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Convert to MP3</button>
+        </form>
+        <div id="responseMessage" class="alert mt-3 d-none" role="alert"></div>
+        <div id="downloadLink" class="mt-3 d-none">
+            <a href="#" id="downloadBtn" class="btn btn-success" download>Download MP3</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('wavFile');
+            const responseMessage = document.getElementById('responseMessage');
+            const downloadLinkDiv = document.getElementById('downloadLink');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            responseMessage.classList.add('d-none');
+            downloadLinkDiv.classList.add('d-none');
+
+            if (!fileInput.files.length) {
+                responseMessage.textContent = 'Please select a WAV file to upload.';
+                responseMessage.classList.remove('d-none', 'alert-success', 'alert-danger');
+                responseMessage.classList.add('alert-warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                responseMessage.textContent = 'Converting...';
+                responseMessage.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+                responseMessage.classList.add('alert-info');
+
+                const response = await fetch('/convert/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = 'converted.mp3';
+
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    downloadBtn.href = url;
+                    downloadBtn.download = filename;
+                    downloadLinkDiv.classList.remove('d-none');
+
+                    responseMessage.textContent = 'Conversion successful!';
+                    responseMessage.classList.remove('alert-info', 'alert-danger', 'alert-warning');
+                    responseMessage.classList.add('alert-success');
+                } else {
+                    const errorData = await response.json();
+                    responseMessage.textContent = `Error: ${errorData.detail || 'Unknown error'}`;
+                    responseMessage.classList.remove('alert-info', 'alert-success', 'alert-warning');
+                    responseMessage.classList.add('alert-danger');
+                }
+            } catch (error) {
+                responseMessage.textContent = `Network error: ${error.message}`;
+                responseMessage.classList.remove('alert-info', 'alert-success', 'alert-warning');
+                responseMessage.classList.add('alert-danger');
+            }
+        });
+    </script>
+</body>
+</html>
