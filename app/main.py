@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydub import AudioSegment
 import os
 import shutil
-from google.oauth2 import service_account
+import google.auth
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
@@ -19,29 +19,20 @@ app = FastAPI()
 
 
 # --- Google Drive Configuration ---
-# The application uses a service account to authenticate with the Google Drive API.
-# The service account credentials should be stored in a file named 'service_account.json'.
-# When deploying to Cloud Run, this file should be mounted as a secret.
+# The application uses the runtime service account's Application Default Credentials
+# to authenticate with the Google Drive API. Ensure the Cloud Run service's
+# service account has the "Editor" role on the target Google Drive folder.
 #
 # The ID of the Google Drive folder where the files will be uploaded should be
 # set as an environment variable named 'FOLDER_ID'.
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-SERVICE_ACCOUNT_FILE = '/app/wav-converter-service-account/latest'
 FOLDER_ID = os.environ.get('FOLDER_ID')
 
 def get_drive_service():
-    """Authenticates with the Google Drive API and returns a service object."""
-    creds = None
-    if os.path.exists(SERVICE_ACCOUNT_FILE):
-        creds = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    else:
-        # If the service account file is not found, you can add other
-        # authentication methods here, for example, using the gcloud credentials.
-        # For this example, we will raise an exception.
-        raise FileNotFoundError(f"Service account file not found at {SERVICE_ACCOUNT_FILE}")
-
+    """Authenticates with the Google Drive API using Application Default
+    Credentials and returns a service object."""
+    creds, _ = google.auth.default(scopes=SCOPES)
     return build('drive', 'v3', credentials=creds)
 
 def upload_to_drive(file_path, file_name):
