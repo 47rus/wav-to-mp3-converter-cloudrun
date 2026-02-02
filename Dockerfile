@@ -20,4 +20,4 @@ COPY ./app .
 EXPOSE 8000
 
 # Run the production server Gunicorn with a Uvicorn worker using shell form
-CMD gunicorn -w 1 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips='*' --bind 0.0.0.0:$PORT main:app
+CMD gunicorn -w 1 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips='*' --bind 0.0.0.0:$PORT app.main:app
