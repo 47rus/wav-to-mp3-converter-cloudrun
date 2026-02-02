@@ -19,5 +19,5 @@ COPY app/main.py .
 # Expose the port the app runs on
 EXPOSE 8080
 
-# Run the production server Gunicorn with the correct module path for the flat structure
-CMD gunicorn -w 1 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips='*' --bind 0.0.0.0:$PORT main:app
+# Run the production server Gunicorn with the simple, proven command
+CMD gunicorn --bind 0.0.0.0:$PORT main:app
