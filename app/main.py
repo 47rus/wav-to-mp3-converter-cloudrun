@@ -11,6 +11,45 @@ from typing import Optional
 
 app = FastAPI()
 
+# --- Google Drive Configuration ---
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+FOLDER_ID = os.environ.get('FOLDER_ID')
+
+def get_drive_service():
+    """Authenticates with the Google Drive API using Application Default
+    Credentials and returns a service object."""
+    creds, _ = google.auth.default(scopes=SCOPES)
+    return build('drive', 'v3', credentials=creds)
+
+def upload_to_drive(file_path, file_name):
+    """Uploads a file to the specified Google Drive folder and returns a downloadable link."""
+    if not FOLDER_ID:
+        raise ValueError("The FOLDER_ID environment variable is not set.")
+
+    service = get_drive_service()
+    file_metadata = {
+        'name': file_name,
+        'parents': [FOLDER_ID]
+    }
+    media = MediaFileUpload(file_path, mimetype='audio/mpeg')
+    file = service.files().create(body=file_metadata,
+                                    media_body=media,
+                                    fields='id',
+                                    supportsAllDrives=True).execute()
+    file_id = file.get('id')
+
+    # Make the file publicly readable
+    permission = {'type': 'anyone', 'role': 'reader'}
+    service.permissions().create(fileId=file_id,
+                                 body=permission,
+                                 supportsAllDrives=True).execute()
+
+    # Get the file's metadata again to retrieve the downloadable link
+    file_metadata = service.files().get(fileId=file_id,
+                                        fields='webContentLink',
+                                        supportsAllDrives=True).execute()
+    return file_metadata.get('webContentLink')
+
 @app.post("/convert/")
 async def convert_wav_to_mp3(
     file: UploadFile = File(...),
