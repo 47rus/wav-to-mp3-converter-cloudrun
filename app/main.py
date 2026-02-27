@@ -1,4 +1,15 @@
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from pydub import AudioSegment
+import os
+import shutil
+import google.auth
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+import logging
+import tempfile
 from typing import Optional
+
+app = FastAPI()
 
 @app.post("/convert/")
 async def convert_wav_to_mp3(
